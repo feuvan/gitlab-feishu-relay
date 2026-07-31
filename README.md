@@ -130,4 +130,4 @@ go build -o gitlab-feishu-relay main.go
 
 ## License
 
-No license has been selected yet. Add a license before accepting external contributions or redistribution.
+MIT License. See [`LICENSE`](LICENSE).

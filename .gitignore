@@ -1,0 +1,12 @@
+# Local binaries
+/main
+/gitlab-feishu-relay
+
+# Local configuration and logs
+/.env
+*.log
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
