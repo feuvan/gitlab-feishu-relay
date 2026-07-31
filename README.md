@@ -4,7 +4,7 @@
 
 A dependency-free, single-file Go webhook relay that turns GitLab project and group events into readable Feishu cards. Supports GitLab 19.1 events, Feishu signing, optional token validation, retries, deduplication, health checks, and debug logs.
 
-社区交流 / Community: [LINUX DO](https://linux.do)
+社区交流 / Community: [LINUX DO](https://linux.do/t/topic/2686329)
 
 ## Features
 
