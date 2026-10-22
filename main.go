@@ -781,7 +781,7 @@ func (app *relay) buildCard(payload event, eventHeader string) card {
 		title = fmt.Sprintf("合并请求 !%d · %s", a.IID, displayAction(firstNonEmpty(a.Action, a.State, "update")))
 		lines = append(lines,
 			fmt.Sprintf("**标题：** %s", md(a.Title)),
-			fmt.Sprintf("**分支：** `%s` → `%s`", md(a.SourceBranch), md(a.TargetBranch)),
+			fmt.Sprintf("**分支：** `%s` → `%s`", mdCode(a.SourceBranch), mdCode(a.TargetBranch)),
 			fmt.Sprintf("**当前状态：** %s", md(displayStatus(a.State))),
 		)
 		lines = addField(lines, "说明", clip(a.Description, 280), false)
@@ -794,10 +794,10 @@ func (app *relay) buildCard(payload event, eventHeader string) card {
 		}
 	case "pipeline":
 		a := payload.ObjectAttributes
-		status := firstNonEmpty(a.DetailedStatus, a.Status, "unknown")
+		status := firstNonEmpty(a.Status, a.DetailedStatus, "unknown")
 		title = "流水线 · " + displayStatus(status)
 		lines = append(lines,
-			fmt.Sprintf("**分支：** `%s`", md(a.Ref)),
+			fmt.Sprintf("**分支：** `%s`", mdCode(a.Ref)),
 			fmt.Sprintf("**状态：** %s", md(displayStatus(status))),
 		)
 		if a.Duration > 0 {
@@ -861,7 +861,7 @@ func (app *relay) buildCard(payload event, eventHeader string) card {
 		lines = append(lines,
 			fmt.Sprintf("**Job：** %s", md(payload.BuildName)),
 			fmt.Sprintf("**阶段：** %s", md(payload.BuildStage)),
-			fmt.Sprintf("**分支：** `%s`", md(payload.Ref)),
+			fmt.Sprintf("**分支：** `%s`", mdCode(payload.Ref)),
 			fmt.Sprintf("**状态：** %s", md(displayStatus(payload.BuildStatus))),
 		)
 		if payload.BuildDuration > 0 {
@@ -893,7 +893,7 @@ func (app *relay) buildCard(payload event, eventHeader string) card {
 		buttonText = "查看 Feature Flag"
 		title = "Feature Flag · " + state
 		lines = append(lines,
-			fmt.Sprintf("**名称：** `%s`", md(a.Name)),
+			fmt.Sprintf("**名称：** `%s`", mdCode(a.Name)),
 			fmt.Sprintf("**状态：** %s", state),
 			fmt.Sprintf("**说明：** %s", md(firstNonEmpty(a.Description, "无"))),
 		)
@@ -906,7 +906,7 @@ func (app *relay) buildCard(payload event, eventHeader string) card {
 		title = "Release · " + displayAction(firstNonEmpty(payload.Action, "update"))
 		lines = append(lines,
 			fmt.Sprintf("**名称：** %s", md(payload.Name)),
-			fmt.Sprintf("**Tag：** `%s`", md(resourceID(payload.Tag))),
+			fmt.Sprintf("**Tag：** `%s`", mdCode(resourceID(payload.Tag))),
 		)
 		lines = addField(lines, "说明", clip(payload.Description, 320), false)
 		link = firstNonEmpty(payload.URL, link)
@@ -959,10 +959,10 @@ func (app *relay) buildCard(payload event, eventHeader string) card {
 			fmt.Sprintf("**严重级别：** %s", md(displaySeverity(a.Severity))),
 		)
 		if a.Location.File != "" {
-			lines = append(lines, fmt.Sprintf("**位置：** `%s`", md(a.Location.File)))
+			lines = append(lines, fmt.Sprintf("**位置：** `%s`", mdCode(a.Location.File)))
 		}
 		if a.Location.Dependency.Package.Name != "" {
-			lines = append(lines, fmt.Sprintf("**依赖：** `%s@%s`", md(a.Location.Dependency.Package.Name), md(a.Location.Dependency.Version)))
+			lines = append(lines, fmt.Sprintf("**依赖：** `%s@%s`", mdCode(a.Location.Dependency.Package.Name), mdCode(a.Location.Dependency.Version)))
 		}
 		link = firstNonEmpty(a.URL, link)
 		color = severityColor(a.Severity)
@@ -1228,7 +1228,7 @@ func addField(lines []string, label, value string, code bool) []string {
 		return lines
 	}
 	if code {
-		return append(lines, fmt.Sprintf("**%s：** `%s`", label, md(value)))
+		return append(lines, fmt.Sprintf("**%s：** `%s`", label, mdCode(value)))
 	}
 	return append(lines, fmt.Sprintf("**%s：** %s", label, md(value)))
 }
@@ -1305,6 +1305,14 @@ func formatDuration(seconds float64) string {
 func md(value string) string {
 	replacer := strings.NewReplacer("\\", "\\\\", "`", "\\`", "*", "\\*", "_", "\\_", "[", "\\[", "]", "\\]")
 	return replacer.Replace(value)
+}
+
+// mdCode prepares a value for an inline code span. Feishu renders backslash
+// escapes literally inside code spans (unlike normal text), so md() must not
+// be used there -- it would show "\_" for every underscore. Only a backtick
+// could terminate the span, so replace those.
+func mdCode(value string) string {
+	return strings.ReplaceAll(value, "`", "'")
 }
 
 func envOr(key, fallback string) string {
